@@ -1,8 +1,47 @@
 import openai
 import os
+# from src.utils import parse_json_response
 
 # Set your OpenAI API key via environment variable or directly
-openai.api_key = os.getenv("OPENAI_API_KEY", "your-openai-api-key")
+
+
+def routing_prompt(conversation: str):
+    """
+    Uses GPT-4 to generate a prompt for routing the conversation to the appropriate endpoint.
+    """
+
+    prompt = """
+    The goal is to generate an image of a place based on the description provided by the user.
+    
+    Based on the information provided by user determine if the information is sufficient to generate an image or if you need more information to generate the image.
+    If the information is sufficient route the request to the image generation endpoint. If the information is insufficient route the request to the information collection endpoint.
+
+    Make sure atlease 3-4 turns of conversation have happened before routing to the image generation endpoint.
+
+    conversation:
+    {conversation}
+
+    Output one of the following: 
+
+    - "image generation"
+    - "collect information"
+    The output format should be in the following format:
+    
+    ```json
+    {{"endpoint": "choice"}}
+    ```
+
+    Output:
+    """
+
+    response = openai.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a prompt routing assistant."},
+            {"role": "user", "content": prompt.format(conversation=conversation)}
+        ]
+    )
+    return response.choices[0].message.content
 
 def generate_chat_response(messages):
     """
@@ -18,7 +57,7 @@ def generate_chat_response(messages):
     }
     full_messages = [system_prompt] + messages
     response = openai.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o-mini",
         messages=full_messages
     )
     return response.choices[0].message.content
@@ -34,7 +73,7 @@ def generate_image_prompt(conversation: str):
         "Generate the image prompt:"
     )
     response = openai.chat.completions.create(
-        model="gpt-40-mini",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are a prompt generation assistant."},
             {"role": "user", "content": prompt_instructions}
@@ -55,7 +94,7 @@ def generate_refinement_prompt(corrections: str):
         "Generate the updated image prompt:"
     )
     response = openai.chat.completions.create(
-        model="gpt-40-mini",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are a prompt generation assistant for image refinement."},
             {"role": "user", "content": prompt_instructions}
