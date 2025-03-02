@@ -6,8 +6,10 @@ from src.image_generation import generate_draft_image, refine_image_draft
 from src.llm_interaction import (
     generate_chat_response,
     generate_image_prompt,
-    generate_refinement_prompt
+    generate_refinement_prompt,
+    routing_prompt
 )
+from src.utils import parse_json_response
 
 app = FastAPI()
 
@@ -38,10 +40,22 @@ def chat_endpoint(payload: ChatPayload):
     response_text = generate_chat_response(messages)
     return {"response": response_text}
 
+@app.post("/route")
+def route_endpoint(payload: ChatPayload):
+    """
+    Receives the full conversation history and returns a routing prompt.
+    Uses GPT-4 for the routing prompt.
+    """
+    messages = [{"role": msg.role, "content": msg.content} for msg in payload.chat_history]
+    response_text = routing_prompt(messages)
+    print(response_text)
+    parsed_response = parse_json_response(response_text)
+    return {"response": parsed_response}
+
 @app.post("/submit_memory")
 def submit_memory(memory: MemoryInput):
     """
-    Receives the conversation text, uses GPT‑40‑mini to generate an enhanced prompt,
+    Receives the conversation text, uses GPT-4o-mini to generate an enhanced prompt,
     and calls DALL·E 3 to generate an initial draft image.
     """
     enhanced_prompt = generate_image_prompt(memory.conversation)
@@ -51,8 +65,8 @@ def submit_memory(memory: MemoryInput):
 @app.post("/refine_image")
 def refine_image(refine: RefinementInput):
     """
-    Uses GPT‑40‑mini to generate a refined image prompt based on user corrections,
-    then calls DALL·E 2’s image editing API to produce an updated image.
+    Uses GPT-4o-mini to generate a refined image prompt based on user corrections,
+    then calls DALL·E 2's image editing API to produce an updated image.
     """
     refined_prompt = generate_refinement_prompt(refine.corrections)
     refined_image_url = refine_image_draft(refine.original_image_url, refined_prompt)
