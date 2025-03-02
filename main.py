@@ -27,6 +27,7 @@ class MemoryInput(BaseModel):
 
 # Data model for image refinement
 class RefinementInput(BaseModel):
+    original_prompt: str
     corrections: str
     original_image_url: str
 
@@ -60,7 +61,7 @@ def submit_memory(memory: MemoryInput):
     """
     enhanced_prompt = generate_image_prompt(memory.conversation)
     draft_image_url = generate_draft_image(enhanced_prompt)
-    return {"draft_image_url": draft_image_url}
+    return {"draft_image_url": draft_image_url, "enhanced_prompt": enhanced_prompt}
 
 @app.post("/refine_image")
 def refine_image(refine: RefinementInput):
@@ -68,7 +69,7 @@ def refine_image(refine: RefinementInput):
     Uses GPT-4o-mini to generate a refined image prompt based on user corrections,
     then calls DALL·E 2's image editing API to produce an updated image.
     """
-    refined_prompt = generate_refinement_prompt(refine.corrections)
+    refined_prompt = generate_refinement_prompt(refine.original_prompt, refine.corrections)
     refined_image_url = refine_image_draft(refine.original_image_url, refined_prompt)
     return {"refined_image_url": refined_image_url}
 

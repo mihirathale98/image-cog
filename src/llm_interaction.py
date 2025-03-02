@@ -1,5 +1,6 @@
 import openai
 import os
+import base64
 # from src.utils import parse_json_response
 
 # Set your OpenAI API key via environment variable or directly
@@ -82,13 +83,16 @@ def generate_image_prompt(conversation: str):
     generated_prompt = response.choices[0].message.content.strip()
     return generated_prompt
 
-def generate_refinement_prompt(corrections: str):
+def generate_refinement_prompt(original_prompt: str, corrections: str):
     """
     Uses GPT-4o-mini to generate an improved image prompt based on user corrections for image refinement.
     """
     prompt_instructions = (
         "Based on the following corrections or refinements provided by the user, generate an updated and more detailed "
         "image prompt for DALL·E. Include any additional details about colors, objects, or layout that would improve the image. "
+        "Keep the prompt short and concise. "
+        "The original prompt is:\n\n"
+        f"{original_prompt}\n\n"
         "The corrections are:\n\n"
         f"{corrections}\n\n"
         "Generate the updated image prompt:"
@@ -102,3 +106,51 @@ def generate_refinement_prompt(corrections: str):
     )
     generated_prompt = response.choices[0].message.content.strip()
     return generated_prompt
+
+
+# Function to convert image to bytes
+def encode_image(image_path):
+    with open(image_path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+# Function to generate a mask for image editing based on user conversation
+def generate_mask(image_path, conversation):
+    base64_image = encode_image(image_path)
+    prompt = f"""
+    Take a deep look at the given image and the conversation.
+
+    Based on the edit request made by the user, provide a mask for making changes to the image.
+
+    Assume that the original image is 1024x1024 pixels. Provide the pixel coordinates for the mask where the image needs to be edited based on the user's input.
+
+    Conversation:
+    {conversation}
+
+    The output should be in following format:
+
+    ```json
+    {{"mask": "[x1, y1, x2, y2]"}}
+    ```
+
+    Output:
+    """
+    response = openai.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": prompt
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+                    },
+                ],
+            }
+        ],
+    )
+
+    return response.choices[0].message.content

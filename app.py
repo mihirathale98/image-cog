@@ -44,6 +44,7 @@ def generate_draft_image():
     
     if response.ok:
         image_url = response.json().get("draft_image_url")
+        st.session_state.original_prompt = response.json().get("enhanced_prompt")
         
         response_message = {
             "role": "assistant",
@@ -59,6 +60,7 @@ def generate_draft_image():
 
 def refine_image(corrections):
     payload = {
+        "original_prompt": st.session_state.original_prompt,
         "corrections": corrections,
         "original_image_url": st.session_state.current_image_url
     }
