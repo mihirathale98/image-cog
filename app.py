@@ -86,34 +86,39 @@ if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     
     payload = {"chat_history": st.session_state.messages}
-    
-    route_response = requests.post(f"{backend_url}/route", json=payload)
-    if route_response.ok:
-        route_response = route_response.json().get("response")['endpoint']
-        print(route_response)
-    
-    if route_response == "image generation":
-        st.session_state.show_draft_button = True
-        generate_draft_image()
 
+    if st.session_state.current_image_url == None:
+
+        route_response = requests.post(f"{backend_url}/route", json=payload)
+        if route_response.ok:
+            route_response = route_response.json().get("response")['endpoint']
+        
+        if route_response == "image generation":
+            st.session_state.show_draft_button = True
+            generate_draft_image()
+
+        else:
+        
+            with st.spinner("Thinking..."):
+                response = requests.post(f"{backend_url}/chat", json=payload)
+        
+                if response.ok:
+                    assistant_reply = response.json().get("response")
+                    
+                    response_message = {
+                        "role": "assistant",
+                        "content": assistant_reply
+                    }
+                    st.session_state.messages.append(response_message)
+                    
+                else:
+                    st.error("Error in receiving chat response.")
+                    
     else:
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        payload = {"chat_history": st.session_state.messages}
+        refine_image(prompt)
     
-        with st.spinner("Thinking..."):
-            response = requests.post(f"{backend_url}/chat", json=payload)
-    
-            if response.ok:
-                assistant_reply = response.json().get("response")
-                
-                response_message = {
-                    "role": "assistant",
-                    "content": assistant_reply
-                }
-                st.session_state.messages.append(response_message)
-                
-            else:
-                st.error("Error in receiving chat response.")
-    
-
     if st.session_state.messages:
         for message in st.session_state.messages:
             with st.chat_message(message["role"]):
@@ -121,12 +126,23 @@ if prompt:
                 if "image_url" in message:
                     st.image(message["image_url"], use_column_width=True)
 
-if st.session_state.image_ready and st.session_state.current_image_url:
-    with st.expander("Refine this image"):
-        corrections = st.text_area("What would you like to change about the image?")
-        if st.button("Submit Refinements"):
-            if corrections.strip():
-                st.session_state.messages.append({"role": "user", "content": corrections})
-                refine_image(corrections)
-            else:
-                st.warning("Please enter some refinements")
+
+
+
+
+# if st.session_state.image_ready and st.session_state.current_image_url:
+#     with st.expander("Refine this image"):
+#         corrections = st.text_area("What would you like to change about the image?")
+#         if st.button("Submit Refinements"):
+#             if corrections.strip():
+#                 st.session_state.messages.append({"role": "user", "content": corrections})
+#                 refine_image(corrections)
+#             else:
+#                 st.warning("Please enter some refinements")
+    
+#     if st.session_state.messages:
+#         for message in st.session_state.messages:
+#             with st.chat_message(message["role"]):
+#                 st.markdown(message["content"])
+#                 if "image_url" in message:
+#                     st.image(message["image_url"], use_column_width=True)
