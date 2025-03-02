@@ -86,7 +86,7 @@ if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
     
     payload = {"chat_history": st.session_state.messages}
-
+    
     route_response = requests.post(f"{backend_url}/route", json=payload)
     if route_response.ok:
         route_response = route_response.json().get("response")['endpoint']
@@ -95,7 +95,6 @@ if prompt:
     if route_response == "image generation":
         st.session_state.show_draft_button = True
         generate_draft_image()
-
 
     else:
     

@@ -64,7 +64,7 @@ def generate_chat_response(messages):
 
 def generate_image_prompt(conversation: str):
     """
-    Uses GPT‑40‑mini to generate a detailed and vivid image prompt for DALL·E based on the user's conversation.
+    Uses GPT-4o-mini to generate a detailed and vivid image prompt for DALL·E based on the user's conversation.
     """
     prompt_instructions = (
         "Based on the following conversation about a memorable place, generate a detailed image prompt for DALL·E. "
@@ -84,7 +84,7 @@ def generate_image_prompt(conversation: str):
 
 def generate_refinement_prompt(corrections: str):
     """
-    Uses GPT‑40‑mini to generate an improved image prompt based on user corrections for image refinement.
+    Uses GPT-4o-mini to generate an improved image prompt based on user corrections for image refinement.
     """
     prompt_instructions = (
         "Based on the following corrections or refinements provided by the user, generate an updated and more detailed "
