@@ -90,7 +90,7 @@ def generate_refinement_prompt(original_prompt: str, corrections: str):
     prompt_instructions = (
         "Based on the following corrections or refinements provided by the user, generate an updated and more detailed "
         "image prompt for DALL·E. Include any additional details about colors, objects, or layout that would improve the image. "
-        "Keep the prompt short and concise. "
+        "Keep the prompt short and concise under 100 words. "
         "The original prompt is:\n\n"
         f"{original_prompt}\n\n"
         "The corrections are:\n\n"
@@ -122,6 +122,7 @@ def generate_mask(image_path, conversation):
     Based on the edit request made by the user, provide a mask for making changes to the image.
 
     Assume that the original image is 1024x1024 pixels. Provide the pixel coordinates for the mask where the image needs to be edited based on the user's input.
+    The coordinates should never be [0, 0, 1024, 1024].
 
     Conversation:
     {conversation}
