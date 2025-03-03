@@ -1,3 +1,5 @@
 openai
 pillow
-ast
+streamlit
+fastapi
+uvicorn

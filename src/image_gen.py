@@ -3,7 +3,6 @@ import requests
 import tempfile
 from PIL import Image
 from PIL import ImageDraw
-import replicate
 from src.llm_interaction import generate_mask
 from src.utils import parse_json_response
 from ast import literal_eval
